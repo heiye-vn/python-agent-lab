@@ -25,3 +25,9 @@ print("=" * 50)
 result = client.invoke("你好，请问你是？")
 print(result)
 print(type(result))
+
+
+"""
+模型提供商 <==> 对应依赖包查询：
+https://python.langchain.com/docs/integrations/chat/
+"""
