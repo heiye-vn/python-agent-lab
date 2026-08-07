@@ -49,7 +49,7 @@ cd python-agent-lab
 python -m venv .venv
 
 # Windows PowerShell 激活
-.\.venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.ps1
 
 # Linux / macOS 激活
 source .venv/bin/activate
