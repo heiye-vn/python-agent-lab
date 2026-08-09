@@ -31,7 +31,6 @@ env/
 .env.local
 
 # IDE & Editors
-.vscode/
 .idea/
 *.swp
 *.swo
