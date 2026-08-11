@@ -20,6 +20,7 @@ wheels/
 .installed.cfg
 *.egg
 .gradio/
+py_output/
 
 # Virtual Environment
 .venv/
