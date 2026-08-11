@@ -1,4 +1,4 @@
-# LangChain Tools 复习总结
+# LangChain 接入工具 Tool
 
 > **核心关键词**：`Tool`、`@tool`、`Tool Calling`、`ToolRuntime`、`State`、`Context`、`Store`、`ToolNode`、`Command`、`MCP`
 >
@@ -20,13 +20,13 @@ Tool 是 Agent 连接外部世界的标准接口——LLM 本身不执行操作�
 
 ## 二、Tool 的核心组成
 
-| 要素 | 说明 |
-|---|---|
-| **name** | Tool 名称，推荐 `snake_case`，避免中文/空格/连字符 |
-| **description** | LLM 据此判断何时调用该 Tool，必须清晰、准确、描述实际能力 |
-| **input schema** | 由类型注解自动生成，LLM 据此决定传什么参数 |
-| **function** | 真正执行逻辑 |
-| **return value** | 返回给 LLM 的结果（字符串 / 结构化数据 / `Command`） |
+| 要素             | 说明                                                      |
+| ---------------- | --------------------------------------------------------- |
+| **name**         | Tool 名称，推荐 `snake_case`，避免中文/空格/连字符        |
+| **description**  | LLM 据此判断何时调用该 Tool，必须清晰、准确、描述实际能力 |
+| **input schema** | 由类型注解自动生成，LLM 据此决定传什么参数                |
+| **function**     | 真正执行逻辑                                              |
+| **return value** | 返回给 LLM 的结果（字符串 / 结构化数据 / `Command`）      |
 
 ---
 
@@ -75,10 +75,10 @@ def get_weather(location: str, units: str = "celsius", include_forecast: bool = 
 
 ## 五、Tool 返回值
 
-| 返回类型 | 适用场景 |
-|---|---|
-| `str` | 简单文本结果 |
-| `dict` | 结构化业务数据（数据库 / API 返回） |
+| 返回类型  | 适用场景                                             |
+| --------- | ---------------------------------------------------- |
+| `str`     | 简单文本结果                                         |
+| `dict`    | 结构化业务数据（数据库 / API 返回）                  |
 | `Command` | 不仅返回数据，还可修改 Agent State / 控制 Graph 流转 |
 
 ```python
@@ -112,11 +112,11 @@ LLM 产生的 `tool_call` 示例：
 
 ## 七、Tool vs Structured Output
 
-| | Structured Output | Tool |
-|---|---|---|
-| 核心目标 | 得到结构化数据 | 执行外部能力 |
-| 执行函数 | ❌ | ✅ |
-| Agent 核心能力 | 辅助 | 核心 |
+|                | Structured Output | Tool         |
+| -------------- | ----------------- | ------------ |
+| 核心目标       | 得到结构化数据    | 执行外部能力 |
+| 执行函数       | ❌                | ✅           |
+| Agent 核心能力 | 辅助              | 核心         |
 
 简记：**Structured Output = LLM → 数据**，**Tool Calling = LLM → 动作**
 
@@ -149,23 +149,23 @@ def get_user_info(runtime: ToolRuntime) -> str:
 
 ToolRuntime 可访问的资源：
 
-| 资源 | 说明 |
-|---|---|
-| **State** | 当前 Agent 的短期状态（消息、购物车等） |
-| **Context** | 本次调用的运行时上下文（user_id、tenant_id 等） |
-| **Store** | 跨会话的长期持久化数据（用户偏好、历史配置等） |
-| stream_writer | 流式输出 |
-| execution info | 执行元信息 |
+| 资源           | 说明                                            |
+| -------------- | ----------------------------------------------- |
+| **State**      | 当前 Agent 的短期状态（消息、购物车等）         |
+| **Context**    | 本次调用的运行时上下文（user_id、tenant_id 等） |
+| **Store**      | 跨会话的长期持久化数据（用户偏好、历史配置等）  |
+| stream_writer  | 流式输出                                        |
+| execution info | 执行元信息                                      |
 
 ---
 
 ## 十、State / Context / Store 对比
 
-| 概念 | 含义 | 生命周期 | 示例 |
-|---|---|---|---|
-| **State** | 当前 Agent 执行状态 | 短期（单次对话） | `messages`、`cart`、`language` |
-| **Context** | 调用时传入的运行时上下文 | 当前调用 | `user_id`、`tenant_id` |
-| **Store** | 持久化数据 | 长期（跨会话） | 用户偏好、历史配置 |
+| 概念        | 含义                     | 生命周期         | 示例                           |
+| ----------- | ------------------------ | ---------------- | ------------------------------ |
+| **State**   | 当前 Agent 执行状态      | 短期（单次对话） | `messages`、`cart`、`language` |
+| **Context** | 调用时传入的运行时上下文 | 当前调用         | `user_id`、`tenant_id`         |
+| **Store**   | 持久化数据               | 长期（跨会话）   | 用户偏好、历史配置             |
 
 Context 的重要性：身份、权限、租户隔离等 **不应由 LLM 生成**，应由后端通过 Context 注入。
 
@@ -205,12 +205,12 @@ builder.add_conditional_edges("llm", tools_condition)
 
 ## 十二、Tool 来源生态
 
-| 来源 | 说明 |
-|---|---|
-| **自定义 Tool** | `@tool` 自行编写 |
-| **Toolkit** | 一组相关 Tool 的集合（如 `SQLDatabaseToolkit`） |
-| **第三方 Tool** | Tavily、Exa（搜索）、Python REPL（代码）、GitHub / Slack 等 |
-| **MCP Tool** | Model Context Protocol，标准化的外部 Tool 能力提供方式 |
+| 来源                 | 说明                                                                |
+| -------------------- | ------------------------------------------------------------------- |
+| **自定义 Tool**      | `@tool` 自行编写                                                    |
+| **Toolkit**          | 一组相关 Tool 的集合（如 `SQLDatabaseToolkit`）                     |
+| **第三方 Tool**      | Tavily、Exa（搜索）、Python REPL（代码）、GitHub / Slack 等         |
+| **MCP Tool**         | Model Context Protocol，标准化的外部 Tool 能力提供方式              |
 | **Server-side Tool** | Provider 原生提供（Web Search、Code Interpreter），由 Provider 执行 |
 
 ```text
@@ -311,21 +311,21 @@ LangGraph Runtime（State / Node / Edge / ToolNode / Command / Checkpoint）
 
 ## 十七、速查速记
 
-| 概念 | 一句话 |
-|---|---|
-| Tool | 给 Agent 提供外部能力 |
-| `@tool` | 把 Python 函数转换成 LangChain Tool |
-| Schema | 告诉 LLM Tool 需要什么参数 |
-| Description | 告诉 LLM 什么时候应该使用这个 Tool |
-| Tool Calling | LLM 决定调用哪个 Tool，并生成参数 |
-| ToolRuntime | Tool 获取 Agent 运行时信息的入口 |
-| State | 当前 Agent 的短期状态 |
-| Context | 当前调用携带的运行时上下文 |
-| Store | 跨调用/跨会话的长期数据 |
-| ToolNode | LangGraph 中负责执行 Tool 的节点 |
-| Command | Tool 不仅返回数据，还可更新 State / 控制 Graph |
-| Toolkit | 一组相关 Tool 的集合 |
-| MCP | 标准化的外部 Tool / 能力提供方式 |
+| 概念         | 一句话                                         |
+| ------------ | ---------------------------------------------- |
+| Tool         | 给 Agent 提供外部能力                          |
+| `@tool`      | 把 Python 函数转换成 LangChain Tool            |
+| Schema       | 告诉 LLM Tool 需要什么参数                     |
+| Description  | 告诉 LLM 什么时候应该使用这个 Tool             |
+| Tool Calling | LLM 决定调用哪个 Tool，并生成参数              |
+| ToolRuntime  | Tool 获取 Agent 运行时信息的入口               |
+| State        | 当前 Agent 的短期状态                          |
+| Context      | 当前调用携带的运行时上下文                     |
+| Store        | 跨调用/跨会话的长期数据                        |
+| ToolNode     | LangGraph 中负责执行 Tool 的节点               |
+| Command      | Tool 不仅返回数据，还可更新 State / 控制 Graph |
+| Toolkit      | 一组相关 Tool 的集合                           |
+| MCP          | 标准化的外部 Tool / 能力提供方式               |
 
 ---
 
