@@ -14,3 +14,4 @@ playwright>=1.62.0
 lxml>=6.1.1
 beautifulsoup4>=4.15.0
 reportlab>=5.0.0
+langchain-mcp-adapters>=0.3.2
