@@ -41,3 +41,8 @@ env/
 # Logs & MCP Cache
 *.log
 .playwright-mcp/
+
+# Vector Store Indices
+faiss_db/
+*.faiss
+
