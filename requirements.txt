@@ -19,4 +19,7 @@ streamlit>=1.61.1
 pypdf>=6.15.0
 dashscope>=1.26.6
 faiss-cpu>=1.15.0
+langchain-experimental>=0.4.2
+matplotlib>=3.11.1
+tabulate>=0.10.0
 
