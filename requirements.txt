@@ -22,4 +22,5 @@ faiss-cpu>=1.15.0
 langchain-experimental>=0.4.2
 matplotlib>=3.11.1
 tabulate>=0.10.0
+langchain_tavily>=0.2.18
 

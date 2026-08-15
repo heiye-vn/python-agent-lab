@@ -3,10 +3,9 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from langchain_tavily import TavilySearch
-from langchain.chat_models import init_chat_model
 from langchain.agents import create_agent  # 较新版本
-
+from langchain.chat_models import init_chat_model
+from langchain_tavily import TavilySearch
 
 sys.stdout.reconfigure(encoding="utf-8")
 
