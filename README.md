@@ -15,21 +15,30 @@
 
 ---
 
-## 📁 目录规划
+## 📁 目录结构
 
 ```text
 python-agent-lab/
-├── docs/                   # 相关架构设计文档与学习笔记
-├── src/                    # 核心代码与实验模块
-│   ├── basic_chains/       # 基础 Chain 与 Prompt 实验室
-│   ├── langgraph_agents/   # LangGraph 状态图与智能体工作流
-│   ├── multi_agent/        # 多智能体协作系统
-│   └── tools/              # 自定义工具与 API 扩展
-├── tests/                  # 单元测试与集成测试
+├── code/                   # 各章节学习代码（含示例与笔记）
+│   ├── chapter01/          # LLM 客户端创建方式
+│   ├── chapter02/          # 链与 LCEL
+│   ├── chapter03/          # 对话系统（单轮/多轮/流式/Gradio）
+│   ├── chapter04/          # 工具调用 Tool
+│   ├── chapter05/          # 浏览器自动化（Playwright）
+│   ├── chapter06/          # MCP 协议
+│   ├── chapter07/          # PDF RAG 系统（FAISS）
+│   ├── chapter08/          # 数据分析 Agent（Streamlit）
+│   ├── chapter09/          # LangGraph 状态图
+│   └── chapter10/          # LangGraph 多工具调用
+├── learning_docs/          # 框架学习指南（LlamaIndex 等）
+├── interview/              # 面试知识点速查（Agent 评估体系等）
+├── CHAPTERS.md             # 章节主题与关键内容索引
 ├── .gitignore
 ├── README.md
 └── requirements.txt
 ```
+
+> 各章节的学习主题、关键知识点与代表文件说明，详见 [CHAPTERS.md](./CHAPTERS.md)。
 
 ---
 
@@ -57,9 +66,10 @@ source .venv/bin/activate
 
 ### 3. 配置环境变量
 
-复制示例配置文件并填入 API Key：
+进入要运行的章节目录（如 `code/chapter01/`），复制示例配置文件并填入 API Key：
 
 ```bash
+cd code/chapter01
 cp .env.example .env
 ```
 
@@ -71,9 +81,3 @@ cp .env.example .env
 - **核心框架**: LangChain, LangGraph
 - **模型集成**: OpenAI / Anthropic / Google Gemini / Ollama
 - **工具支持**: Pydantic, FAISS / Chroma
-
----
-
-## 📄 开源协议
-
-[MIT License](LICENSE)
