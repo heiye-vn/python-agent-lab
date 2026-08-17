@@ -37,6 +37,7 @@ env/
 *.swp
 *.swo
 .workbuddy/
+.vscode/
 
 # Logs & MCP Cache
 *.log
