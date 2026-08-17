@@ -16,6 +16,8 @@
 | [Chapter 08](#chapter-08-数据分析-agent) | 数据分析 Agent | pandas、matplotlib、代码执行工具 |
 | [Chapter 09](#chapter-09-langgraph) | LangGraph | StateGraph、Reducer、条件边、预构建图 |
 | [Chapter 10](#chapter-10-langgraph-多工具调用) | LangGraph 多工具调用 | `create_agent`、多工具绑定、递归限制 |
+| [Chapter 11](#chapter-11-langgraph-智能体服务化与-langsmith-全链路监控) | LangGraph 部署与 LangSmith 监控 | `langgraph dev`、Studio 调试、LangSmith Traces、全链路追踪 |
+| [Chapter 12](#chapter-12-langgraph-智能数据分析-agent) | LangGraph 智能数据分析 Agent | NL2SQL、DataFrame 缓存、代码执行 REPL、Seaborn 可视化、双 Graph 架构 |
 
 ---
 
@@ -164,6 +166,34 @@
 - `GraphRecursionError` 递归限制的处理。
 
 **代表文件**：`01_langgraph多工具调用.py`、`02_langgraph内部工具调用.py`
+
+---
+
+## Chapter 11 — LangGraph 智能体服务化与 LangSmith 全链路监控
+
+**主题**：LangGraph 本地服务化部署、LangGraph Studio 可视化调试与 LangSmith 链路追踪。
+
+**关键内容**：
+- `langgraph.json` 架构与服务声明。
+- `langgraph dev` 启动开发服务与 Web Studio 可视化单步调试。
+- **LangSmith** 链路追踪（Traces）：Token 消耗、延迟分析、节点流转树与调用异常监控。
+
+**代表文件**：`graph.py`、`langgraph.json`、`README.md`
+
+---
+
+## Chapter 12 — LangGraph 智能数据分析 Agent
+
+**主题**：全流程智能数据分析 Agent（NL2SQL + DataFrame 内存提取 + Python 代码计算 + 数据可视化）。
+
+**关键内容**：
+- 四大核心分析工具协同：`sql_inter`、`extract_data`、`python_inter`、`fig_inter`。
+- 全局内存共享：将 SQL 提取的 Pandas DataFrame 直接沉淀在内存中供后续 Python/绘图复用。
+- **双 Graph 模式支持**：
+  - `data_agent`：标准 MySQL 关系型数据库支持。
+  - `data_agent_sqlite`：内置 SQLite 开箱即用模式（自带电信客户流失数据集 `telco.db`）。
+
+**代表文件**：`graph.py`、`graph_sqlite.py`、`init_db.py`、`langgraph.json`、`README.md`
 
 ---
 
