@@ -18,6 +18,7 @@
 | [Chapter 10](#chapter-10-langgraph-多工具调用) | LangGraph 多工具调用 | `create_agent`、多工具绑定、递归限制 |
 | [Chapter 11](#chapter-11-langgraph-智能体服务化与-langsmith-全链路监控) | LangGraph 部署与 LangSmith 监控 | `langgraph dev`、Studio 调试、LangSmith Traces、全链路追踪 |
 | [Chapter 12](#chapter-12-langgraph-智能数据分析-agent) | LangGraph 智能数据分析 Agent | NL2SQL、DataFrame 缓存、代码执行 REPL、Seaborn 可视化、双 Graph 架构 |
+| [Chapter 13](#chapter-13-langgraph-基础图构建与-pydantic-状态管理) | LangGraph 基础图构建与 Pydantic 状态管理 | StateGraph、Pydantic State、START/END、draw_mermaid |
 
 ---
 
@@ -194,6 +195,19 @@
   - `data_agent_sqlite`：内置 SQLite 开箱即用模式（自带电信客户流失数据集 `telco.db`）。
 
 **代表文件**：`graph.py`、`graph_sqlite.py`、`init_db.py`、`langgraph.json`、`README.md`
+
+---
+
+## Chapter 13 — LangGraph 基础图构建与 Pydantic 状态管理
+
+**主题**：深入 LangGraph 底层图构建机制，掌握 StateGraph 节点流转、Mermaid 结构可视化，以及基于 Pydantic BaseModel 的强类型状态管理。
+
+**关键内容**：
+- **基础状态图构建**：基于 `StateGraph(dict)` 搭建图工作流，使用 `add_node` 注册计算节点、`add_edge` 配置 `START -> addition -> subtraction -> END` 确定性串行流转。
+- **图结构可视化**：调用 `graph.get_graph().draw_mermaid()` 导出标准 Mermaid 流程图代码，掌握实线（固定边）/虚线（条件边）的渲染与节点链路检查。
+- **Pydantic 结构化状态**：使用 `pydantic.BaseModel` 和 `Field` 替代原生字典，实现状态字段自动类型校验、默认值设置与属性访问安全。
+
+**代表文件**：`01_create_graph.py`、`02_pydantic_state.py`
 
 ---
 
