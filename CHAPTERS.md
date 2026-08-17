@@ -18,6 +18,7 @@
 | [Chapter 10](#chapter-10-langgraph-多工具调用) | LangGraph 多工具调用 | `create_agent`、多工具绑定、递归限制 |
 | [Chapter 11](#chapter-11-langgraph-智能体服务化与-langsmith-全链路监控) | LangGraph 部署与 LangSmith 监控 | `langgraph dev`、Studio 调试、LangSmith Traces、全链路追踪 |
 | [Chapter 12](#chapter-12-langgraph-智能数据分析-agent) | LangGraph 智能数据分析 Agent | NL2SQL、DataFrame 缓存、代码执行 REPL、Seaborn 可视化、双 Graph 架构 |
+| [Chapter 12 (UI)](#chapter-12-ui-langgraph-前端聊天交互界面-agent-chat-ui) | LangGraph 前端交互客户端 | Next.js、LangGraph Server 对接、流式响应、工具调用可视化 |
 | [Chapter 13](#chapter-13-langgraph-基础图构建与-pydantic-状态管理) | LangGraph 基础图构建与 Pydantic 状态管理 | StateGraph、Pydantic State、START/END、draw_mermaid |
 
 ---
@@ -195,6 +196,20 @@
   - `data_agent_sqlite`：内置 SQLite 开箱即用模式（自带电信客户流失数据集 `telco.db`）。
 
 **代表文件**：`graph.py`、`graph_sqlite.py`、`init_db.py`、`langgraph.json`、`README.md`
+
+---
+
+## Chapter 12 (UI) — LangGraph 前端聊天交互界面 (Agent Chat UI)
+
+**主题**：基于 Next.js 的现代化 LangGraph 前端聊天客户端，为本地及云端部署的 LangGraph 服务提供开箱即用的 Web 对话与调试界面。
+
+**关键内容**：
+- **服务对接与协议交互**：通过 `NEXT_PUBLIC_API_URL`（默认 `http://localhost:2024`）和 `NEXT_PUBLIC_ASSISTANT_ID` 无缝连接本地 `langgraph dev` 暴露的 Graph 服务。
+- **流式响应与工具调用可视化**：实时流式渲染 LLM 生成内容，折叠/展开呈现 Agent 内部工具调用（Tool Calls）输入与输出。
+- **多会话与状态管理**：支持多 Thread 对话切换、上下文恢复与消息历史管理。
+- **技术栈**：Next.js (App Router) + React + Tailwind CSS + Radix UI / shadcn/ui。
+
+**代表文件**：`code/chapter12_agent-chat-ui/package.json`、`src/`、`.env.example`、`README.md`
 
 ---
 
