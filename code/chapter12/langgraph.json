@@ -1,0 +1,8 @@
+{
+  "dependencies": [" ./"],
+  "graphs":{
+    "data_agent": "./graph.py:graph",
+    "data_agent_sqlite": "./graph_sqlite.py:graph"
+  },
+  "env": ".env"
+}

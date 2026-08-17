@@ -1,0 +1,14 @@
+langchain
+langgraph
+langchain-core
+langchain-deepseek
+langchain-tavily
+python-dotenv
+langsmith
+pydantic
+matplotlib
+seaborn
+pandas
+IPython
+langchain_mcp_adapters
+pymysql
