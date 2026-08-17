@@ -1,0 +1,7 @@
+{
+    "dependencies": ["./"],
+    "graphs": {
+        "chatbot": "./graph.py:graph"
+    },
+    "env": ".env"
+}
