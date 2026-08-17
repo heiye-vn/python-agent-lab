@@ -47,3 +47,7 @@ env/
 faiss_db/
 *.faiss
 
+# LangGraph Dev Server & Cache
+.langgraph_api/
+.langgraph_gui/
+
