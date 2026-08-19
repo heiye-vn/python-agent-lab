@@ -61,13 +61,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# ==========================================
-# 5. 本地运行产物与数据库 (Data, DB & Local Output)
-# ==========================================
-# SQLite / 数据库生成文件
+# SQLite / 数据库生成文件与运行时缓存
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 *.sqlite
 *.sqlite3
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
 
 # 向量数据库与模型缓存
 faiss_db/

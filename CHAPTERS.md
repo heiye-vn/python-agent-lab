@@ -20,6 +20,9 @@
 | [Chapter 12](#chapter-12-langgraph-智能数据分析-agent) | LangGraph 智能数据分析 Agent | NL2SQL、DataFrame 缓存、代码执行 REPL、Seaborn 可视化、双 Graph 架构 |
 | [Chapter 12 (UI)](#chapter-12-ui-langgraph-前端聊天交互界面-agent-chat-ui) | LangGraph 前端交互客户端 | Next.js、LangGraph Server 对接、流式响应、工具调用可视化 |
 | [Chapter 13](#chapter-13-langgraph-基础图构建与-pydantic-状态管理) | LangGraph 基础图构建与 Pydantic 状态管理 | StateGraph、Pydantic State、START/END、draw_mermaid |
+| [Chapter 14](#chapter-14-langgraph-条件分支与循环图) | LangGraph 条件分支与循环图 | 条件边 `add_conditional_edges`、循环控制、计数器 |
+| [Chapter 15](#chapter-15-langgraph-对话持久化与-react-预构建图复现) | LangGraph 对话持久化与 ReAct 复现 | `InMemorySaver`、`add_messages` Reducer、ToolNode、Agent Loop |
+| [Chapter 16](#chapter-16-langgraph-进阶记忆管理与长期记忆系统) | LangGraph 进阶记忆管理与长期记忆 | Checkpointer(Memory/SQLite/PG/Redis)、Store 长期记忆、滚动摘要、Mem0、Zep、综合交互系统 |
 
 ---
 
@@ -223,6 +226,71 @@
 - **Pydantic 结构化状态**：使用 `pydantic.BaseModel` 和 `Field` 替代原生字典，实现状态字段自动类型校验、默认值设置与属性访问安全。
 
 **代表文件**：`01_create_graph.py`、`02_pydantic_state.py`
+
+---
+
+## Chapter 14 — LangGraph 条件分支与循环图
+
+**主题**：掌握 LangGraph 的条件路由判定、循环控制与递归限制处理。
+
+**关键内容**：
+- **条件边判定（Conditional Edge）**：使用 `add_conditional_edges` 结合路由函数，实现分支流转（如根据状态值跳转到不同计算节点或 `END`）。
+- **循环图控制（Cycle Graph）**：在状态图中构建节点回环（如 `node_a -> node_b -> node_a`），利用 State 中的计数器（Counter）控制终止条件，避免无限死循环。
+- **复合判定与循环图**：将条件判断与循环逻辑结合，实现具备自我调节和重试能力的动态图工作流。
+
+**代表文件**：`01_judge_graph.py`、`02_cycle_graph.py`、`03_judge_cycle_graph.py`
+
+---
+
+## Chapter 15 — LangGraph 对话持久化与 ReAct 预构建图复现
+
+**主题**：深入 LangGraph 对话持久化机制，手写底层节点与条件边复现 `create_react_agent`。
+
+**关键内容**：
+- **基础多轮对话与 Reducer**：使用 `add_messages` 实现消息状态的追加合并而非覆盖。
+- **会话持久化与 Checkpointer**：使用 `InMemorySaver` 绑定图编译，通过 `configurable={"thread_id": ...}` 实现多会话隔离与上下文自动维护。
+- **手写复现 ReAct 预构建图**：
+  - 自定义 `AgentState`；
+  - 构造 `call_model` 节点绑定心知天气 API 工具（`@tool` + Pydantic Schema）；
+  - 构造 `ToolNode` 与 `should_continue` 条件边，完整跑通 `agent -> tools -> agent -> END` 闭环。
+
+**代表文件**：`01_多轮对话机器人.py`、`02_持久化多轮对话机器人.py`、`03_复现ReAct预构建图.py`
+
+---
+
+## Chapter 16 — LangGraph 进阶记忆管理与长期记忆系统
+
+**主题**：掌握工业级 Agent 多层记忆架构，覆盖单会话短期持久化（Checkpointer）、跨会话长期画像（Store）、上下文裁剪与滚动摘要、时间旅行状态干预、第三方前沿记忆引擎（Mem0 / Zep）以及企业级混合记忆交互系统。
+
+**关键内容**：
+- **短期会话持久化（Checkpointer 演进）**：
+  - **内存级**：`InMemorySaver` 适用于单机开发与单元测试；
+  - **本地持久化**：`SqliteSaver` 实现轻量文件级会话断点保存；
+  - **分布式云端**：Supabase `PostgresSaver` 实现生产级多实例高并发状态共享；
+  - **高速缓存与 TTL**：Upstash `Redis` 检查点管理与会话级自动过期淘汰（TTL 回收）。
+- **长期跨会话记忆（Store 架构与用户画像）**：
+  - `InMemoryStore`、`SqliteStore`、Supabase `PostgresStore` 的存储模型；
+  - 多租户 Namespace 分层设计（如 `("users", user_id, "profile")`）；
+  - 冷启动画像召回（Recall）注入 System Prompt 与热路径工具（`save_user_memory`）自主沉淀。
+- **短程上下文预算控制与滚动摘要**：
+  - `trim_messages` 锁定 `SystemMessage` 的精准 Token 预算裁剪；
+  - `Summarization Node` 触发阈值动态生成对话摘要，配合 `RemoveMessage` 修剪历史冗余。
+- **时间旅行（Time Travel）与状态干预**：
+  - `get_state_history` 追溯快照调用链；
+  - **Replay 时光重放**：回退并修改历史节点状态，沿原 Thread 重新执行；
+  - **Fork 平行分叉**：基于历史检查点克隆至新 `thread_id` 探索平行分支。
+- **前沿第三方记忆引擎集成**：
+  - **Mem0**：多层级（User/Session/Agent）记忆沉淀、自动冲突更新与语义相似度召回；
+  - **Zep (Graphiti)**：时序知识图谱（Temporal Knowledge Graph），节点与实体关系的动态演进。
+- **企业级综合多层记忆交互系统**：
+  - 融合 **Supabase PostgreSQL**（长期记忆 Store）+ **Upstash Redis**（短期记忆 TTL Checkpointer）+ **滚动摘要** + **CLI 控制台调试指令** 的完整闭环应用。
+
+**代表文件**：
+- 短期记忆：`01_langgraph_InMemorySaver_短期记忆.py`、`02_langgraph_sqlite_短期记忆.py`、`03_langgraph_postgres_短期记忆.py`、`07_langgrapg_redis_记忆系统.py`、`08_langgraph_redis_test.py`
+- 长期记忆：`04_langgraph_InMemoryStore_长期记忆.py`、`05_langgraph_sqlite_长期记忆.py`、`06_langgraph_postgres_长期记忆.py`、`10_长期记忆Store与用户画像.py`
+- 裁剪与时间旅行：`09_消息裁剪与滚动摘要记忆.py`、`11_时间旅行与状态分支干预.py`
+- 第三方记忆库：`12_mem0_test.py`、`13_langgraph_mem0多维度记忆系统.py`、`14_mem0_对话机器人.py`、`15_zep_时序知识图谱记忆.py`
+- 综合交互系统与笔记：`16_综合记忆管理交互系统.py`、`note.md`
 
 ---
 
