@@ -23,9 +23,7 @@ if not bailian_api_key:
 
 db_uri = os.getenv("SUPABASE_DB_URL")
 if not db_uri:
-    raise ValueError(
-        "未检测到 SUPABASE_DB_URL，请检查 code/chapter16/.env 文件配置！"
-    )
+    raise ValueError("未检测到 SUPABASE_DB_URL，请检查 code/chapter16/.env 文件配置！")
 
 # 1. 初始化大模型
 llm = init_chat_model(
@@ -101,7 +99,14 @@ with PostgresStore.from_conn_string(db_uri) as store:
     }
     print(">>> 【会话 1】提问：查询长期档案")
     response_1 = agent.invoke(
-        {"messages": [{"role": "user", "content": "查一下我的长期用户档案，告诉我我是谁、有什么座右铭？"}]},
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "查一下我的长期用户档案，告诉我我是谁、有什么座右铭？",
+                }
+            ]
+        },
         config=config_1,
     )
     print("Agent 回复：", response_1["messages"][-1].content)
@@ -116,7 +121,14 @@ with PostgresStore.from_conn_string(db_uri) as store:
     }
     print("\n>>> 【会话 2】提问（开启全新会话窗口，测试跨 Thread 读取云端长期档案）：")
     response_2 = agent.invoke(
-        {"messages": [{"role": "user", "content": "在新的聊天窗口里，你还能查到我喜欢什么吗？"}]},
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "在新的聊天窗口里，你还能查到我喜欢什么吗？",
+                }
+            ]
+        },
         config=config_2,
     )
     print("Agent 回复：", response_2["messages"][-1].content)

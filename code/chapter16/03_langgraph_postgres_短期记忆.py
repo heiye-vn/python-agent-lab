@@ -3,8 +3,8 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from langchain.chat_models import init_chat_model
 from langchain.agents import create_agent
+from langchain.chat_models import init_chat_model
 from langgraph.checkpoint.postgres import PostgresSaver
 
 # 避免 Windows 终端中文编码异常
@@ -21,9 +21,7 @@ if not bailian_api_key:
 
 db_uri = os.getenv("SUPABASE_DB_URL")
 if not db_uri:
-    raise ValueError(
-        "未检测到 SUPABASE_DB_URL，请检查 code/chapter16/.env 文件配置！"
-    )
+    raise ValueError("未检测到 SUPABASE_DB_URL，请检查 code/chapter16/.env 文件配置！")
 
 # 1. 初始化大模型
 llm = init_chat_model(

@@ -2,15 +2,15 @@ import os
 import sys
 from pathlib import Path
 from typing import Annotated
-from typing_extensions import TypedDict
 
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import END, START
 from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
+from typing_extensions import TypedDict
 
 # 避免 Windows 终端中文编码异常
 sys.stdout.reconfigure(encoding="utf-8")
@@ -101,7 +101,9 @@ def run_time_travel_demo():
     print("-" * 55)
 
     history_snapshots = list(travel_graph.get_state_history(main_config))
-    print(f"主线程当前共生成了 {len(history_snapshots)} 个状态快照（按时间从新到旧）：\n")
+    print(
+        f"主线程当前共生成了 {len(history_snapshots)} 个状态快照（按时间从新到旧）：\n"
+    )
 
     for idx, snap in enumerate(history_snapshots, start=1):
         ckpt_id = snap.config["configurable"]["checkpoint_id"]
@@ -157,7 +159,9 @@ def run_time_travel_demo():
     # -------------------------------------------------------------
     print("\n" + "-" * 55)
     print("【第 4 阶段：Fork 平行分叉 —— 开启全新独立时间线】")
-    print("（场景：保留原 Thread 不变，从最初输入分叉出一个'去日本京都看樱花'的独立世界）")
+    print(
+        "（场景：保留原 Thread 不变，从最初输入分叉出一个'去日本京都看樱花'的独立世界）"
+    )
     print("-" * 55)
 
     forked_thread_id = "trip_planning_fork_japan"
@@ -179,7 +183,9 @@ def run_time_travel_demo():
     print(f"[AI (Fork 分支结果)]:\n{fork_res['messages'][-1].content}\n")
 
     print("=" * 65)
-    print("✅ 时间旅行验证完毕：Replay 修改了原线程后续分支，Fork 创造了平行的独立分支。")
+    print(
+        "✅ 时间旅行验证完毕：Replay 修改了原线程后续分支，Fork 创造了平行的独立分支。"
+    )
     print("=" * 65)
 
 

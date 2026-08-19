@@ -2,12 +2,11 @@ import os
 import sys
 import uuid
 from pathlib import Path
-from typing import Annotated, Any
-from typing_extensions import TypedDict
+from typing import Annotated
 
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.checkpoint.memory import InMemorySaver
@@ -17,6 +16,7 @@ from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.store.memory import InMemoryStore
+from typing_extensions import TypedDict
 
 # 避免 Windows 终端中文编码异常
 sys.stdout.reconfigure(encoding="utf-8")
@@ -74,7 +74,9 @@ def save_user_memory(category: str, memory_text: str, config: RunnableConfig) ->
         },
     )
 
-    print(f"\n💾 [Store 长期记忆写入] 用户: {user_id} | 分类: {category} | 键: {memory_key}")
+    print(
+        f"\n💾 [Store 长期记忆写入] 用户: {user_id} | 分类: {category} | 键: {memory_key}"
+    )
     print(f"   记忆内容: {memory_text}\n")
     return f"已成功将用户信息保存至长期记忆库 (Key: {memory_key})"
 
@@ -122,8 +124,8 @@ def recall_and_agent_node(state: MemoryAgentState, config: RunnableConfig):
         )
     else:
         system_content = (
-            f"你是一个拥有长期记忆的智能助手。\n"
-            f"如果用户在对话中提及了姓名、偏好、城市、技术栈等关键个人信息，请主动调用 save_user_memory 工具将其记录下来。"
+            "你是一个拥有长期记忆的智能助手。\n"
+            "如果用户在对话中提及了姓名、偏好、城市、技术栈等关键个人信息，请主动调用 save_user_memory 工具将其记录下来。"
         )
 
     prompt = [SystemMessage(content=system_content)] + state["messages"]
@@ -203,7 +205,9 @@ def demo_cross_thread_memory():
         }
     }
 
-    user_input_2 = "今晚下班后想在公司附近和朋友吃顿好的，请为我推荐 2 道特色美食并说明推荐原因。"
+    user_input_2 = (
+        "今晚下班后想在公司附近和朋友吃顿好的，请为我推荐 2 道特色美食并说明推荐原因。"
+    )
     print(f"[User (Thread 2)]: {user_input_2}")
 
     result_2 = agent_graph.invoke(

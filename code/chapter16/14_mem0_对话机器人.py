@@ -2,10 +2,10 @@ import os
 import sys
 import uuid
 from pathlib import Path
-from typing import Annotated, Any, Dict, List, Optional
-from typing_extensions import TypedDict
+from typing import Annotated, Any
 
 from dotenv import load_dotenv
+from typing_extensions import TypedDict
 
 # 避免 Windows 终端中文编码异常
 sys.stdout.reconfigure(encoding="utf-8")
@@ -22,7 +22,7 @@ os.environ.pop("http_proxy", None)
 os.environ.pop("https_proxy", None)
 
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.checkpoint.memory import InMemorySaver
@@ -39,7 +39,9 @@ if not mem0_api_key:
 
 bailian_api_key = os.getenv("ALI_BAILIAN_API_KEY")
 if not bailian_api_key:
-    raise ValueError("未检测到 ALI_BAILIAN_API_KEY，请检查 code/chapter16/.env 文件配置！")
+    raise ValueError(
+        "未检测到 ALI_BAILIAN_API_KEY，请检查 code/chapter16/.env 文件配置！"
+    )
 
 # 初始化 Mem0 客户端与 LLM
 mem0_client = MemoryClient(api_key=mem0_api_key)
@@ -77,7 +79,7 @@ def save_memory(
     user_id = configurable.get("user_id", "default_user")
     agent_id = configurable.get("agent_id", "assistant")
 
-    kwargs: Dict[str, Any] = {}
+    kwargs: dict[str, Any] = {}
     if target_scope == "user":
         kwargs["user_id"] = user_id
     elif target_scope == "agent":
@@ -104,29 +106,23 @@ class ChatState(TypedDict):
 def recall_and_chat_node(state: ChatState, config: RunnableConfig):
     configurable = config.get("configurable", {})
     user_id = configurable.get("user_id", "default_user")
-    agent_id = configurable.get("agent_id", "assistant")
+    # agent_id = configurable.get("agent_id", "assistant")
 
     latest_msg = state["messages"][-1].content if state["messages"] else ""
 
-    recalled_info: List[str] = []
+    recalled_info: dict[str] = []
 
     # 1. 自动检索用户专属画像
     try:
-        u_hits = mem0_client.search(
-            latest_msg, filters={"user_id": user_id}, limit=4
-        )
-        items = (
-            u_hits.get("results", u_hits)
-            if isinstance(u_hits, dict)
-            else u_hits
-        )
+        u_hits = mem0_client.search(latest_msg, filters={"user_id": user_id}, limit=4)
+        items = u_hits.get("results", u_hits) if isinstance(u_hits, dict) else u_hits
         memories = [it.get("memory") for it in items if it.get("memory")]
         if memories:
             recalled_info.append(
                 f"【关于用户 (ID: {user_id}) 的已知长期画像】:\n"
                 + "\n".join(f"  • {m}" for m in memories)
             )
-    except Exception:
+    except Exception:  # noqa
         pass
 
     # 2. 自动检索全局公共规则
@@ -134,17 +130,13 @@ def recall_and_chat_node(state: ChatState, config: RunnableConfig):
         g_hits = mem0_client.search(
             latest_msg, filters={"app_id": GLOBAL_APP_ID}, limit=2
         )
-        items = (
-            g_hits.get("results", g_hits)
-            if isinstance(g_hits, dict)
-            else g_hits
-        )
+        items = g_hits.get("results", g_hits) if isinstance(g_hits, dict) else g_hits
         memories = [it.get("memory") for it in items if it.get("memory")]
         if memories:
             recalled_info.append(
                 "【全局公共业务规则】:\n" + "\n".join(f"  • {m}" for m in memories)
             )
-    except Exception:
+    except Exception:  # noqa
         pass
 
     system_prompt = (
@@ -190,9 +182,13 @@ def run_interactive_memory_bot():
     print("🤖 欢迎进入【LangGraph + Mem0 智能记忆对话系统】")
     print("=" * 68)
     print("💡 系统特性：")
-    print("  1. 【自然添加】：直接在聊天中说出你的偏好或事实，Agent 会自动识别并保存到 Mem0；")
+    print(
+        "  1. 【自然添加】：直接在聊天中说出你的偏好或事实，Agent 会自动识别并保存到 Mem0；"
+    )
     print("  2. 【自然检索】：直接提问，Agent 会根据当前用户身份自动检索并回答；")
-    print("  3. 【跨会话穿透】：切换新会话（/new）后，短期记忆重置，但长期记忆依然有效！")
+    print(
+        "  3. 【跨会话穿透】：切换新会话（/new）后，短期记忆重置，但长期记忆依然有效！"
+    )
     print("\n📌 快捷指令：")
     print("  • /user <name>   : 切换当前对话用户（测试多用户画像隔离）")
     print("  • /memories      : 查看当前用户在 Mem0 中的全部长期记忆")
@@ -234,15 +230,21 @@ def run_interactive_memory_bot():
                 print(f"\n🔍 正在查询用户 [{current_user}] 的全部 Mem0 长期记忆...")
                 try:
                     all_m = mem0_client.get_all(filters={"user_id": current_user})
-                    results = all_m.get("results", all_m) if isinstance(all_m, dict) else all_m
+                    results = (
+                        all_m.get("results", all_m)
+                        if isinstance(all_m, dict)
+                        else all_m
+                    )
                     if not results:
                         print("  （暂无任何长期记忆记录）\n")
                     else:
                         print(f"  累计共 {len(results)} 条记忆：")
                         for i, it in enumerate(results, start=1):
-                            print(f"   {i}. {it.get('memory')} (分类: {it.get('categories')})")
+                            print(
+                                f"   {i}. {it.get('memory')} (分类: {it.get('categories')})"
+                            )
                         print()
-                except Exception as e:
+                except Exception as e:  # noqa
                     print(f"  查询失败: {e}\n")
                 continue
 
@@ -274,7 +276,7 @@ def run_interactive_memory_bot():
         except KeyboardInterrupt:
             print("\n已退出对话。")
             break
-        except Exception as e:
+        except Exception as e:  # noqa
             print(f"\n❌ [执行异常]: {e}\n")
 
 

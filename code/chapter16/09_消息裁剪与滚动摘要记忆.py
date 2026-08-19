@@ -1,8 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Annotated, Sequence
-from typing_extensions import TypedDict
+from typing import Annotated
 
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
@@ -18,6 +17,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import END, START
 from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
+from typing_extensions import TypedDict
 
 # 避免 Windows 终端中文编码异常
 sys.stdout.reconfigure(encoding="utf-8")
@@ -58,9 +58,13 @@ def demo_trim_messages():
         HumanMessage(content="你好，我叫李雷。"),
         AIMessage(content="你好李雷！很高兴认识你，有什么 Python 问题我可以协助你？"),
         HumanMessage(content="什么是 Python 中的 GIL？"),
-        AIMessage(content="GIL 是全局解释器锁，用于确保同一时刻只有一个线程执行 Python 字节码。"),
+        AIMessage(
+            content="GIL 是全局解释器锁，用于确保同一时刻只有一个线程执行 Python 字节码。"
+        ),
         HumanMessage(content="那在多核 CPU 下如何利用好多进程？"),
-        AIMessage(content="可以使用 multiprocessing 模块或 ProcessPoolExecutor 来规避 GIL。"),
+        AIMessage(
+            content="可以使用 multiprocessing 模块或 ProcessPoolExecutor 来规避 GIL。"
+        ),
         HumanMessage(content="请问我叫什么名字？"),
     ]
 
@@ -89,6 +93,7 @@ def demo_trim_messages():
 # 原理：当对话消息超过阈值时，触发专门的摘要节点，将早期历史压缩为一段 Summary，
 #       并使用 RemoveMessage 清除旧消息，既不爆 Context 又不丢失历史关键事实。
 # =====================================================================
+
 
 # 1. 定义图状态 State
 class SummaryState(TypedDict):
@@ -135,8 +140,8 @@ def summarize_conversation_node(state: SummaryState):
         )
     else:
         summary_prompt = (
-            f"请为以下对话内容生成一段精炼、关键事实完整的中文摘要，"
-            f"提炼出用户的姓名、职业、提问的核心问题及结论：\n"
+            "请为以下对话内容生成一段精炼、关键事实完整的中文摘要，"
+            "提炼出用户的姓名、职业、提问的核心问题及结论：\n"
         )
 
     for msg in messages_to_summarize:
@@ -147,7 +152,9 @@ def summarize_conversation_node(state: SummaryState):
     response = llm.invoke([HumanMessage(content=summary_prompt)])
     new_summary = response.content
 
-    print(f"\n⚡ [触发自动摘要] 已将 {len(messages_to_summarize)} 条老消息压缩为最新摘要：")
+    print(
+        f"\n⚡ [触发自动摘要] 已将 {len(messages_to_summarize)} 条老消息压缩为最新摘要："
+    )
     print(f"   摘要内容: {new_summary}")
     print(f"   已从 State 移除 {len(messages_to_remove)} 条旧消息，释放上下文空间。\n")
 
@@ -210,7 +217,9 @@ def demo_summary_graph():
         current_state = summary_graph.get_state(config)
         retained_messages_count = len(current_state.values.get("messages", []))
         current_summary = current_state.values.get("summary", "（暂无）")
-        print(f"[State 监控] 剩余未压缩消息数: {retained_messages_count} | 累计摘要长度: {len(current_summary)} 字")
+        print(
+            f"[State 监控] 剩余未压缩消息数: {retained_messages_count} | 累计摘要长度: {len(current_summary)} 字"
+        )
 
 
 if __name__ == "__main__":

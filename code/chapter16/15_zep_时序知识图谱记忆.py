@@ -111,7 +111,9 @@ for fact in graph_facts:
 
 # 6. 将 Zep 图谱时序记忆注入大模型 Prompt 进行跨会话回答
 print("\n5. 【全新会话提问】：结合 Zep 长期时序记忆生成回复")
-user_query = "请根据我现在的最新预算和日常喜好，为我推荐一款车，并顺便推荐一款提神饮品！"
+user_query = (
+    "请根据我现在的最新预算和日常喜好，为我推荐一款车，并顺便推荐一款提神饮品！"
+)
 print(f"   [用户提问 (Thread 2)]: {user_query}\n")
 
 # 构建结合 Zep 知识图谱上下文的 Prompt

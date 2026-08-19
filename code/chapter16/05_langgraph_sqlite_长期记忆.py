@@ -106,7 +106,11 @@ with SqliteStore.from_conn_string(str(db_file)) as store:
     }
     print("\n>>> 【会话 2】提问（全新会话窗口，测试跨 Thread 读取长期记忆）：")
     response_2 = agent.invoke(
-        {"messages": [{"role": "user", "content": "推荐一部适合我职业或爱好的周末休闲活动吧"}]},
+        {
+            "messages": [
+                {"role": "user", "content": "推荐一部适合我职业或爱好的周末休闲活动吧"}
+            ]
+        },
         config=config_thread_2,
     )
     print("Agent 回复：", response_2["messages"][-1].content)

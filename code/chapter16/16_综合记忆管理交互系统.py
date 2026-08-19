@@ -24,11 +24,12 @@ import random
 import sys
 import time
 import uuid
+from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import Annotated, Any, Dict, Iterator, List, Optional, Sequence, Tuple
-from typing_extensions import TypedDict
+from typing import Annotated, Any
 
 from dotenv import load_dotenv
+from typing_extensions import TypedDict
 
 # 避免 Windows 终端中文编码异常
 sys.stdout.reconfigure(encoding="utf-8")
@@ -115,7 +116,7 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
         self.client = client
         self.default_ttl = default_ttl
         # 记录特定 thread 的自定义 ttl（如被 /ttl 指令动态修改）
-        self.thread_ttls: Dict[str, int] = {}
+        self.thread_ttls: dict[str, int] = {}
 
     def get_thread_ttl(self, thread_id: str) -> int:
         return self.thread_ttls.get(thread_id, self.default_ttl)
@@ -130,11 +131,11 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
                 pipe.expire(k, ttl)
             pipe.execute()
 
-    def _get_all_keys_for_thread(self, thread_id: str) -> List[bytes]:
+    def _get_all_keys_for_thread(self, thread_id: str) -> list[bytes]:
         pattern = f"lg:*:{thread_id}:*"
         return self.client.keys(pattern)
 
-    def get_next_version(self, current: Optional[str], channel: None) -> str:
+    def get_next_version(self, current: str | None, channel: None) -> str:
         if current is None:
             current_v = 0
         elif isinstance(current, int):
@@ -148,13 +149,15 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
     def _format_key(self, *parts) -> str:
         return ":".join(str(p) for p in parts)
 
-    def get_tuple(self, config: RunnableConfig) -> Optional[CheckpointTuple]:
+    def get_tuple(self, config: RunnableConfig) -> CheckpointTuple | None:
         thread_id = config["configurable"]["thread_id"]
         checkpoint_ns = config["configurable"].get("checkpoint_ns", "")
         checkpoint_id = config["configurable"].get("checkpoint_id")
 
         if not checkpoint_id:
-            latest_key = self._format_key("lg", "threads", thread_id, checkpoint_ns, "latest")
+            latest_key = self._format_key(
+                "lg", "threads", thread_id, checkpoint_ns, "latest"
+            )
             checkpoint_id_bytes = self.client.get(latest_key)
             if not checkpoint_id_bytes:
                 return None
@@ -177,13 +180,17 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
         # 加载通道值
         channel_values = {}
         for channel, version in checkpoint.get("channel_versions", {}).items():
-            blob_key = self._format_key("lg", "blob", thread_id, checkpoint_ns, channel, version)
+            blob_key = self._format_key(
+                "lg", "blob", thread_id, checkpoint_ns, channel, version
+            )
             blob_data = self.client.hgetall(blob_key)
             if blob_data:
                 blob_type = blob_data[b"type"].decode("utf-8")
                 blob_val = blob_data[b"data"]
                 if blob_type != "empty":
-                    channel_values[channel] = self.serde.loads_typed((blob_type, blob_val))
+                    channel_values[channel] = self.serde.loads_typed(
+                        (blob_type, blob_val)
+                    )
 
         checkpoint["channel_values"] = channel_values
 
@@ -200,7 +207,9 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
                 channel = w_data[b"channel"].decode("utf-8")
                 w_type = w_data[b"type"].decode("utf-8")
                 w_val = w_data[b"data"]
-                writes.append((task_id, channel, self.serde.loads_typed((w_type, w_val))))
+                writes.append(
+                    (task_id, channel, self.serde.loads_typed((w_type, w_val)))
+                )
 
         return CheckpointTuple(
             config={
@@ -252,7 +261,9 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
             pipe.expire(blob_key, ttl)
 
         # 2. 存储 checkpoint 元信息
-        cp_key = self._format_key("lg", "cp", thread_id, checkpoint_ns, checkpoint["id"])
+        cp_key = self._format_key(
+            "lg", "cp", thread_id, checkpoint_ns, checkpoint["id"]
+        )
         t_cp, data_cp = self.serde.dumps_typed(c)
         meta_dict = get_checkpoint_metadata(config, metadata)
         t_meta, data_meta = self.serde.dumps_typed(meta_dict)
@@ -271,7 +282,9 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
         pipe.expire(cp_key, ttl)
 
         # 3. 更新最新 checkpoint 指针
-        latest_key = self._format_key("lg", "threads", thread_id, checkpoint_ns, "latest")
+        latest_key = self._format_key(
+            "lg", "threads", thread_id, checkpoint_ns, "latest"
+        )
         pipe.set(latest_key, checkpoint["id"], ex=ttl)
 
         pipe.execute()
@@ -287,7 +300,7 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
     def put_writes(
         self,
         config: RunnableConfig,
-        writes: Sequence[Tuple[str, Any]],
+        writes: Sequence[tuple[str, Any]],
         task_id: str,
         task_path: str = "",
     ) -> None:
@@ -330,13 +343,17 @@ class RedisCheckpointSaver(BaseCheckpointSaver):
 
     def list(
         self,
-        config: Optional[RunnableConfig],
+        config: RunnableConfig | None,
         *,
-        filter: Optional[Dict[str, Any]] = None,
-        before: Optional[RunnableConfig] = None,
-        limit: Optional[int] = None,
+        filter: dict[str, Any] | None = None,
+        before: RunnableConfig | None = None,
+        limit: int | None = None,
     ) -> Iterator[CheckpointTuple]:
-        if config and "configurable" in config and "thread_id" in config["configurable"]:
+        if (
+            config
+            and "configurable" in config
+            and "thread_id" in config["configurable"]
+        ):
             t = self.get_tuple(config)
             if t:
                 yield t
@@ -371,8 +388,10 @@ def save_user_memory(key: str, value: str, config: RunnableConfig) -> str:
 
         # 写回 PostgreSQL
         store.put(namespace, user_id, profile_data)
-        
-    print(f"\n   💾 [主动长期记忆沉淀 -> PostgreSQL] 用户: {user_id} | 键: {key} -> 值: {value}")
+
+    print(
+        f"\n   💾 [主动长期记忆沉淀 -> PostgreSQL] 用户: {user_id} | 键: {key} -> 值: {value}"
+    )
     return f"已成功将用户偏好【{key}: {value}】持久化保存至云端 PostgreSQL 数据库！"
 
 
@@ -464,17 +483,27 @@ def summarize_node(state: MemoryAgentState, config: RunnableConfig):
     )
     new_summary = llm.invoke(summary_prompt).content
 
-    print(f"\n   📝 [滚动摘要已触发] 压缩了 {len(messages_to_compress)} 条消息 | 新摘要: {new_summary[:60]}...")
+    print(
+        f"\n   📝 [滚动摘要已触发] 压缩了 {len(messages_to_compress)} 条消息 | 新摘要: {new_summary[:60]}..."
+    )
 
     # 2. 被动画像反思与沉淀 (Passive Reflection)
     reflection_prompt = (
         f"请分析以下被压缩的对话内容，提取出用户明确透露的个人偏好、技术栈、背景或习惯（若无新增则返回空JSON大括号 {{}}）。\n"
         f"对话内容:\n{history_text}\n\n"
-        f"请严格只返回合法 JSON 字典，例如: {{\"hobby\": \"羽毛球\", \"preferred_lang\": \"Python\"}}"
+        f'请严格只返回合法 JSON 字典，例如: {{"hobby": "羽毛球", "preferred_lang": "Python"}}'
     )
     try:
         extract_res = llm.invoke(reflection_prompt).content
-        cleaned = extract_res.strip().strip("```json").strip("```").strip()
+        cleaned = extract_res.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned.removeprefix("```json")
+        elif cleaned.startswith("```"):
+            cleaned = cleaned.removeprefix("```")
+        if cleaned.endswith("```"):
+            cleaned = cleaned.removesuffix("```")
+        cleaned = cleaned.strip()
+
         new_facts = json.loads(cleaned)
         if isinstance(new_facts, dict) and new_facts:
             with store_lock:
@@ -486,8 +515,8 @@ def summarize_node(state: MemoryAgentState, config: RunnableConfig):
                 current_profile["last_updated"] = time.strftime("%Y-%m-%d %H:%M:%S")
                 store.put(namespace, user_id, current_profile)
             print(f"   🔍 [被动长期画像提炼 -> PostgreSQL] 自动捕获事实: {new_facts}")
-    except Exception:
-        pass  # 抽取异常不阻断主流程
+    except Exception as e:  # noqa: BLE001
+        print(f"   ❌ [被动长期画像提炼 -> PostgreSQL] 自动捕获事实失败: {e}")
 
     # 3. 构造 RemoveMessage 物理清除已压缩的旧消息
     delete_ops = [RemoveMessage(id=m.id) for m in messages_to_compress if m.id]
@@ -572,7 +601,11 @@ def run_interactive_system():
         app = workflow.compile(checkpointer=checkpointer, store=store)
 
         # 启动时允许自定义用户账号，默认沿用示例账号
-        print("👤 请输入当前用户账号 ID (直接回车默认使用: user_wanglin_99): ", end="", flush=True)
+        print(
+            "👤 请输入当前用户账号 ID (直接回车默认使用: user_wanglin_99): ",
+            end="",
+            flush=True,
+        )
         try:
             custom_user = input().strip()
             current_user = custom_user if custom_user else "user_wanglin_99"
@@ -586,16 +619,24 @@ def run_interactive_system():
         # 启动时检查档案
         init_item = store.get(("user_profiles",), current_user)
         if init_item and init_item.value:
-            print(f"👋 欢迎回来！检测到账号 \033[92m{current_user}\033[0m 已存在长期档案画像: {list(init_item.value.keys())}")
+            print(
+                f"👋 欢迎回来！检测到账号 \033[92m{current_user}\033[0m 已存在长期档案画像: {list(init_item.value.keys())}"
+            )
         else:
-            print(f"🌱 欢迎新用户！账号 \033[92m{current_user}\033[0m 目前是空白档案，聊天中透露的偏好会自动沉淀到云端 PostgreSQL。")
+            print(
+                f"🌱 欢迎新用户！账号 \033[92m{current_user}\033[0m 目前是空白档案，聊天中透露的偏好会自动沉淀到云端 PostgreSQL。"
+            )
 
         while True:
             ttl_now = checkpointer.get_thread_ttl(current_thread)
             # 实时检查该用户的档案状态
             user_prof = store.get(("user_profiles",), current_user)
-            prof_status = f"\033[92m已沉淀{len(user_prof.value)}项\033[0m" if (user_prof and user_prof.value) else "\033[90m空白档案\033[0m"
-            
+            prof_status = (
+                f"\033[92m已沉淀{len(user_prof.value)}项\033[0m"
+                if (user_prof and user_prof.value)
+                else "\033[90m空白档案\033[0m"
+            )
+
             prompt_header = f"\n💡 [账号ID: \033[92m{current_user}\033[0m ({prof_status}) | 会话: \033[94m{current_thread}\033[0m | Redis-TTL: \033[93m{ttl_now}s\033[0m]"
             print(prompt_header)
 
@@ -624,8 +665,12 @@ def run_interactive_system():
 
             elif user_input == "/new":
                 current_thread = f"th_{uuid.uuid4().hex[:8]}"
-                print(f"\n✨ [已开启新会话窗口] 新 Thread ID: \033[94m{current_thread}\033[0m")
-                print("👉 短期消息流水账已归零，但云端 PostgreSQL 中的长期画像依然会被自动召回！")
+                print(
+                    f"\n✨ [已开启新会话窗口] 新 Thread ID: \033[94m{current_thread}\033[0m"
+                )
+                print(
+                    "👉 短期消息流水账已归零，但云端 PostgreSQL 中的长期画像依然会被自动召回！"
+                )
                 continue
 
             elif user_input.startswith("/ttl"):
@@ -633,7 +678,9 @@ def run_interactive_system():
                 if len(parts) > 1 and parts[1].isdigit():
                     new_ttl = int(parts[1])
                     checkpointer.set_thread_ttl(current_thread, new_ttl)
-                    print(f"\n⏳ 当前会话 {current_thread} 的 Redis TTL 已动态调整为: {new_ttl} 秒！")
+                    print(
+                        f"\n⏳ 当前会话 {current_thread} 的 Redis TTL 已动态调整为: {new_ttl} 秒！"
+                    )
                 else:
                     print("\n⚠️ 参数错误，使用格式: /ttl <秒数>，例如: /ttl 10")
                 continue
@@ -641,10 +688,14 @@ def run_interactive_system():
             elif user_input.startswith("/expire_test"):
                 parts = user_input.split()
                 wait_sec = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 4
-                print(f"\n🧪 [开始执行 Redis 短期记忆过期测试]")
-                print(f"   1. 将当前 Thread [{current_thread}] 的 TTL 调整为 {wait_sec} 秒...")
+                print("\n🧪 [开始执行 Redis 短期记忆过期测试]")
+                print(
+                    f"   1. 将当前 Thread [{current_thread}] 的 TTL 调整为 {wait_sec} 秒..."
+                )
                 checkpointer.set_thread_ttl(current_thread, wait_sec)
-                print(f"   2. 正在休眠等待 Redis 键自然过期（等待 {wait_sec + 1} 秒）...")
+                print(
+                    f"   2. 正在休眠等待 Redis 键自然过期（等待 {wait_sec + 1} 秒）..."
+                )
                 time.sleep(wait_sec + 1)
 
                 # 检查 Redis 键是否还存在
@@ -652,10 +703,12 @@ def run_interactive_system():
                     {"configurable": {"thread_id": current_thread}}
                 )
                 if tuple_check is None:
-                    print(f"   ✅ [验证成功] Redis 中的短期记忆已被 TTL 机制彻底清空！")
+                    print("   ✅ [验证成功] Redis 中的短期记忆已被 TTL 机制彻底清空！")
                 else:
-                    print(f"   ⚠️ 键尚未完全过期，请重试。")
-                print(f"   3. 现在你可以发送任何消息，测试系统如何从空白短期记忆中重新起步并完美继承长期画像！")
+                    print("   ⚠️ 键尚未完全过期，请重试。")
+                print(
+                    "   3. 现在你可以发送任何消息，测试系统如何从空白短期记忆中重新起步并完美继承长期画像！"
+                )
                 continue
 
             elif user_input == "/profile":
@@ -678,7 +731,9 @@ def run_interactive_system():
                     summary_val = cv.get("summary", "")
                     recalled_val = cv.get("recalled_profile", "")
                     print(f"  • 当前活跃消息数: {len(msgs)} 条")
-                    print(f"  • 累积滚动摘要: {summary_val if summary_val else '（无）'}")
+                    print(
+                        f"  • 累积滚动摘要: {summary_val if summary_val else '（无）'}"
+                    )
                     print(f"  • 注入的画像:\n{recalled_val}")
                 else:
                     print("  • 当前会话尚无活跃 Checkpoint 快照（空会话）。")
@@ -707,9 +762,13 @@ def run_interactive_system():
                 if len(parts) > 1:
                     current_user = parts[1]
                     current_thread = f"th_{uuid.uuid4().hex[:8]}"
-                    print(f"\n👤 [已切换用户] 当前用户: \033[92m{current_user}\033[0m | 自动分配新会话: \033[94m{current_thread}\033[0m")
+                    print(
+                        f"\n👤 [已切换用户] 当前用户: \033[92m{current_user}\033[0m | 自动分配新会话: \033[94m{current_thread}\033[0m"
+                    )
                 else:
-                    print("\n⚠️ 参数错误，使用格式: /switch_user <user_id>，例如: /switch_user user_lisi_66")
+                    print(
+                        "\n⚠️ 参数错误，使用格式: /switch_user <user_id>，例如: /switch_user user_lisi_66"
+                    )
                 continue
 
             # ---------------- 业务对话处理 ----------------
@@ -733,8 +792,8 @@ def run_interactive_system():
                 ][-1]
                 print(f"\n🤖 Agent 回复:\n{last_ai_msg.content}\n")
 
-            except Exception as e:
-                print(f"\n❌ 执行出错: {str(e)}")
+            except Exception as e:  # noqa
+                print(f"\n❌ 模型调用或参数解析失败: {e}")
 
 
 if __name__ == "__main__":

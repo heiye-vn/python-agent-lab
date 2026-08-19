@@ -1,14 +1,14 @@
 import os
 import sys
 from pathlib import Path
-from typing import Annotated, Any, Dict, List, Optional
-from typing_extensions import TypedDict
+from typing import Annotated, Any
 
 from dotenv import load_dotenv
+from typing_extensions import TypedDict
 
 # 避免 Windows 终端中文编码异常
 sys.stdout.reconfigure(encoding="utf-8")
-
+sys.path.append(str(Path(__file__).parent.parent))
 # 加载 .env 环境变量
 load_dotenv(Path(__file__).parent / ".env")
 
@@ -21,7 +21,7 @@ os.environ.pop("http_proxy", None)
 os.environ.pop("https_proxy", None)
 
 from langchain.chat_models import init_chat_model
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.checkpoint.memory import InMemorySaver
@@ -38,7 +38,9 @@ if not mem0_api_key:
 
 bailian_api_key = os.getenv("ALI_BAILIAN_API_KEY")
 if not bailian_api_key:
-    raise ValueError("未检测到 ALI_BAILIAN_API_KEY，请检查 code/chapter16/.env 文件配置！")
+    raise ValueError(
+        "未检测到 ALI_BAILIAN_API_KEY，请检查 code/chapter16/.env 文件配置！"
+    )
 
 # 1. 初始化 Mem0 客户端与大模型
 mem0_client = MemoryClient(api_key=mem0_api_key)
@@ -80,7 +82,7 @@ def save_memory_to_mem0(
     agent_id = configurable.get("agent_id")
     run_id = configurable.get("run_id")
 
-    payload_kwargs: Dict[str, Any] = {}
+    payload_kwargs: dict[str, Any] = {}
 
     if target_scope == "global":
         # 方案 1：全局记忆（绑定统一的 app_id）
@@ -146,7 +148,7 @@ def recall_and_reason_node(state: AgentState, config: RunnableConfig):
     latest_user_message = state["messages"][-1].content if state["messages"] else ""
 
     # 分层召回容器
-    recalled_sections: List[str] = []
+    recalled_sections: list[str] = []
 
     # A. 召回全局公共常识/制度 (filters={"app_id": GLOBAL_APP_ID})
     try:
@@ -161,9 +163,10 @@ def recall_and_reason_node(state: AgentState, config: RunnableConfig):
         memories = [it.get("memory") for it in items if it.get("memory")]
         if memories:
             recalled_sections.append(
-                "【🌐 全局公共业务规则与常识】:\n" + "\n".join(f"- {m}" for m in memories)
+                "【🌐 全局公共业务规则与常识】:\n"
+                + "\n".join(f"- {m}" for m in memories)
             )
-    except Exception as e:
+    except Exception as e:  # noqa
         pass
 
     # B. 召回当前 Agent 自身的 SOP 与经验准则
@@ -183,7 +186,7 @@ def recall_and_reason_node(state: AgentState, config: RunnableConfig):
                     f"【🤖 Agent 自身工作规范 (Agent: {agent_id})】:\n"
                     + "\n".join(f"- {m}" for m in memories)
                 )
-        except Exception:
+        except Exception:  # noqa
             pass
 
     # C. 召回用户长期偏好画像
@@ -203,7 +206,7 @@ def recall_and_reason_node(state: AgentState, config: RunnableConfig):
                     f"【👤 用户长期画像与偏好 (User: {user_id})】:\n"
                     + "\n".join(f"- {m}" for m in memories)
                 )
-        except Exception:
+        except Exception:  # noqa
             pass
 
     # D. 召回本次任务的单次 Run 临时状态
@@ -223,7 +226,7 @@ def recall_and_reason_node(state: AgentState, config: RunnableConfig):
                     f"【⚡ 当前流程临时上下文 (Run: {run_id})】:\n"
                     + "\n".join(f"- {m}" for m in memories)
                 )
-        except Exception:
+        except Exception:  # noqa
             pass
 
     # 组装 System Prompt
@@ -272,7 +275,12 @@ def run_five_schemes_demo():
 
     # 预置一条全局制度
     mem0_client.add(
-        [{"role": "user", "content": "平台所有退款申请需在 3 个工作日内完成财务审核并原路退回"}],
+        [
+            {
+                "role": "user",
+                "content": "平台所有退款申请需在 3 个工作日内完成财务审核并原路退回",
+            }
+        ],
         app_id=GLOBAL_APP_ID,
     )
 

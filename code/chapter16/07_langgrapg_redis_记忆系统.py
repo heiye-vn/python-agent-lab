@@ -2,10 +2,10 @@ import json
 import os
 import sys
 from pathlib import Path
-from dotenv import load_dotenv
-from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
+
 import redis
+from dotenv import load_dotenv
+from langchain.chat_models import init_chat_model
 
 # 避免终端中文乱码
 sys.stdout.reconfigure(encoding="utf-8")
