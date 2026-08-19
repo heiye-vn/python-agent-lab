@@ -8,7 +8,7 @@ from typing_extensions import TypedDict
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.constants import START
 from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
@@ -54,7 +54,7 @@ graph_builder.add_node("chatbot", chatbot)
 graph_builder.add_edge(START, "chatbot")
 
 # 内存型检查点保存器 (Checkpointer)，负责根据 thread_id 维护状态快照
-memory = MemorySaver()
+memory = InMemorySaver()
 graph = graph_builder.compile(checkpointer=memory)
 
 
